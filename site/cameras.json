@@ -1,0 +1,12 @@
+{
+  "title": "Cameras",
+  "thumbIntervalSec": 8,
+  "idleReturnSec": 300,
+  "dailyReloadAt": "03:30",
+  "cameras": [
+    { "id": "driveway",  "name": "Driveway" },
+    { "id": "frontdeck", "name": "Front Deck" },
+    { "id": "garden",    "name": "Garden", "hd": "garden_hd" },
+    { "id": "garage",    "name": "Garage", "hd": "garage_hd" }
+  ]
+}

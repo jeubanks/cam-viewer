@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0b0b0c">
+<title>Cameras</title>
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <div class="topbar-left">
+      <span class="dot" id="server-dot" title="Server"></span>
+      <span id="title">Cameras</span>
+    </div>
+    <span id="server-msg" class="server-msg"></span>
+    <time id="clock">--:--</time>
+  </header>
+
+  <main class="main">
+    <section class="viewer" id="viewer">
+      <cam-player id="player"></cam-player>
+
+      <div class="viewer-label">
+        <span class="live-dot" id="live-dot"></span>
+        <span id="active-name">—</span>
+        <span class="mode" id="mode"></span>
+      </div>
+
+      <div class="overlay" id="overlay" hidden>
+        <div class="spinner"></div>
+        <div id="overlay-text">Connecting…</div>
+      </div>
+
+      <div class="controls">
+        <button type="button" id="hd-btn" class="ctl" hidden aria-pressed="false">HD</button>
+        <button type="button" id="rail-btn" class="ctl" aria-label="Toggle camera list">⤢</button>
+      </div>
+    </section>
+
+    <nav class="rail" id="rail" aria-label="Cameras"></nav>
+  </main>
+</div>
+</body>
+</html>

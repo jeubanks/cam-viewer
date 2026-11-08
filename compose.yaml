@@ -1,0 +1,49 @@
+# Camera viewer: go2rtc (stream relay) + Caddy (site + locked-down proxy), one stack.
+# Both use host networking: go2rtc needs it for WebRTC, and Caddy reaches go2rtc's
+# API over loopback, which is the only place go2rtc lets requests through without a login.
+name: cam-viewer
+
+services:
+  go2rtc:
+    image: alexxit/go2rtc:1.9.15
+    container_name: cam-viewer-go2rtc
+    network_mode: host
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/New_York}
+      HOST_IP: ${HOST_IP:?set HOST_IP in .env}
+      NVR_HOST: ${NVR_HOST:?set NVR_HOST in .env}
+      NVR_USER: ${NVR_USER:?set NVR_USER in .env}
+      NVR_PASS: ${NVR_PASS:?set NVR_PASS in .env}
+      GO2RTC_API_PORT: ${GO2RTC_API_PORT:-1985}
+      GO2RTC_WEBRTC_PORT: ${GO2RTC_WEBRTC_PORT:-8565}
+      GO2RTC_ADMIN_USER: ${GO2RTC_ADMIN_USER:-admin}
+      GO2RTC_ADMIN_PASS: ${GO2RTC_ADMIN_PASS:?set GO2RTC_ADMIN_PASS in .env}
+    volumes:
+      - ./go2rtc:/config
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:${GO2RTC_API_PORT:-1985}/api', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  caddy:
+    image: caddy:2.11.9-alpine
+    container_name: cam-viewer-caddy
+    network_mode: host
+    restart: unless-stopped
+    depends_on:
+      go2rtc:
+        condition: service_healthy
+    environment:
+      SITE_PORT: ${SITE_PORT:-8082}
+      GO2RTC_ADDR: 127.0.0.1:${GO2RTC_API_PORT:-1985}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./site:/srv:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:${SITE_PORT:-8082}/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

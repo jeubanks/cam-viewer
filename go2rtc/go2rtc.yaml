@@ -1,0 +1,35 @@
+# go2rtc config. ${VAR} values come from the container environment (see .env).
+# Docs: https://github.com/AlexxIT/go2rtc
+
+api:
+  listen: ":${GO2RTC_API_PORT:1985}"
+  # Required for every request except loopback, so LAN clients can't read this
+  # config or add sources. Caddy connects over loopback and needs no login.
+  username: ${GO2RTC_ADMIN_USER:admin}
+  password: ${GO2RTC_ADMIN_PASS}
+
+webrtc:
+  listen: ":${GO2RTC_WEBRTC_PORT:8565}"   # UDP + TCP
+  candidates:
+    - ${HOST_IP}:${GO2RTC_WEBRTC_PORT:8565}
+  ice_servers: []                       # LAN only: no public STUN round-trips
+
+rtsp:
+  listen: ""                            # not needed by the viewer
+
+streams:
+  # Reolink HTTP-FLV is more stable than Reolink RTSP. "_sub" streams are
+  # H.264 at low resolution and play everywhere. Stream names must match
+  # site/cameras.json.
+  driveway:  http://${NVR_HOST}/flv?port=1935&app=bcs&stream=channel0_sub.bcs&user=${NVR_USER}&password=${NVR_PASS}
+  frontdeck: http://${NVR_HOST}/flv?port=1935&app=bcs&stream=channel1_sub.bcs&user=${NVR_USER}&password=${NVR_PASS}
+  garden:    http://${NVR_HOST}/flv?port=1935&app=bcs&stream=channel2_sub.bcs&user=${NVR_USER}&password=${NVR_PASS}
+  garage:    http://${NVR_HOST}/flv?port=1935&app=bcs&stream=channel3_sub.bcs&user=${NVR_USER}&password=${NVR_PASS}
+
+  # Full-resolution main streams, used by the HD toggle. Only channels 2 and 3
+  # serve H.264 main over FLV. Channels 0 and 1 (4K/8K) return no video there.
+  garden_hd: http://${NVR_HOST}/flv?port=1935&app=bcs&stream=channel2_main.bcs&user=${NVR_USER}&password=${NVR_PASS}
+  garage_hd: http://${NVR_HOST}/flv?port=1935&app=bcs&stream=channel3_main.bcs&user=${NVR_USER}&password=${NVR_PASS}
+
+log:
+  level: info

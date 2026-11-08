@@ -1,0 +1,43 @@
+{
+	# Host networking: keep Caddy's admin API off so it can't clash with
+	# anything else on :2019.
+	admin off
+	auto_https off
+}
+
+:{$SITE_PORT:8082} {
+	# Only the player endpoints go to go2rtc, and only for plain stream names.
+	# go2rtc creates a new source from any src it doesn't know (URLs, exec:...),
+	# so the name check below is what stops that.
+	@go2rtc {
+		path /api/ws /api/frame.jpeg
+		expression `{query.src}.matches("^[a-z0-9_-]{1,64}$")`
+	}
+	handle @go2rtc {
+		reverse_proxy {$GO2RTC_ADDR:127.0.0.1:1985}
+	}
+
+	# go2rtc's player library, served from the go2rtc we're talking to, so the
+	# client and server protocol versions always match.
+	handle /video-rtc.js {
+		reverse_proxy {$GO2RTC_ADDR:127.0.0.1:1985}
+	}
+
+	handle /api/* {
+		respond 404
+	}
+
+	# Healthy only when go2rtc answers too. Its /api root returns version info only.
+	handle /healthz {
+		rewrite * /api
+		reverse_proxy {$GO2RTC_ADDR:127.0.0.1:1985}
+	}
+
+	handle {
+		root * /srv
+		encode zstd gzip
+		# Kiosks rarely hard-refresh. Make them revalidate so edits land on the next reload.
+		header Cache-Control "no-cache"
+		file_server
+	}
+}
